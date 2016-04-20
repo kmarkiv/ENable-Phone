@@ -3,14 +3,38 @@
 // example programs.  The legal statement from each example
 // is preserved here at the top of the program.  Enjoy!  
 // 
-// Les Hall - Fri Oct 16 2016
+// Les Hall - Fri Oct 16 2015
 // 
 
 
 /*
- * Copyright (c) 2016, Enable
+ * Copyright (c) 2016, e-Nable
  * All rights reserved.
  * 
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ * 
+ * * Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ * 
+ * * Redistributions in binary form must reproduce the above copyright notice, this
+ *   list of conditions and the following disclaimer in the documentation and/or
+ *   other materials provided with the distribution.
+ * 
+ * * Neither the name of e-Nable nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 
@@ -42,7 +66,7 @@ String ID = "1";
 
 
 // specify the time in seconds between phone home attempts
-#define INTERVAL_SECONDS 600
+#define INTERVAL_SECONDS 60
 // specify the pin definitions
 #define LED_PIN 0
 
@@ -138,6 +162,7 @@ void get_credentials() {
   // Check if a client has connected
   WiFiClient client = server.available();
   if (!client) {
+    delay(10000);
     return;
   }
   
@@ -157,7 +182,7 @@ void get_credentials() {
   client.flush();
   
   // get the selection
-  if ( (req.indexOf("/SSID=") != -1) && (SSIDCredentials == 0) ) {
+  if ( (req.indexOf("/SSID=") != -1) ) {//&& (SSIDCredentials == 0) ) {
     userSSID = req;
     int pos1 = userSSID.indexOf("/SSID=");
     pos1 += 6;
@@ -212,7 +237,7 @@ void get_credentials() {
           String newSSID = WiFi.SSID(i);
           for (int j = 0; j < i; ++j) {
             if (newSSID.equals(WiFi.SSID(j))) {
-              match = 1;
+              match = 0;
             }
           }
     
@@ -235,7 +260,7 @@ void get_credentials() {
   client.flush();
 
   delay(1);
-  Serial.println("Client disonnected");
+  Serial.println("Client disconnected");
 }
 
 
@@ -258,13 +283,13 @@ void phone_home() {
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED) {
     ++attempts;
-    if (attempts > 50) {
+    if (attempts > 100) {
       network = 0;
       SSIDCredentials = 0;
       passwordCredentials = 0;
       return;
     }
-    delay(500);
+    delay(2000);
     Serial.print(".");
   }
 
@@ -295,7 +320,8 @@ void phone_home() {
   // We now create a URI for the request
   String chipID = String(ESP.getChipId());
   String voltage = String(batteryVoltage);
-  String url = "/dev/service?type=cilog&note=" + chipID + "%20" + voltage;
+  String url = "http://e-nable.me/dev/service?type=cilog&topic=device/" + chipID + "&mssg=" + voltage;
+  //http://webapp.e-nable.me/dev/service?type=cilog&topic=device/A904012&mssg=my LONG Mssg
   Serial.print("Requesting URL #" + String(value) + ": ");
   Serial.println(url);
   
@@ -327,6 +353,5 @@ void phone_home() {
     }
   }
 }
-
 
 
